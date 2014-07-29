@@ -1,6 +1,6 @@
  <?php
 /**
- * YuiDoc\Files\AtLeastOneModule
+ * YuiDoc\Files\ConstructOrStatic
  *
  * PHP version 5
  *
@@ -12,15 +12,14 @@
  */
 
 /**
- * This sniff ensures that there is at least one @module tag per file
- *
+ * This sniff ensures that there is either a @constructor or @static tag beneath the @class tag
  * @category  PHP
  * @package   PHP_CodeSniffer
  * @author    Bernhard Wick wick.b@hotmail.de
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/wick-ed/yui-doc-sniff
  */
-class YuiDoc_Sniffs_Files_AtLeastOneModule implements PHP_CodeSniffer_Sniff
+class YuiDoc_Sniffs_Class_ConstructOrStatic implements PHP_CodeSniffer_Sniff
 {
     
     /**
@@ -54,24 +53,42 @@ class YuiDoc_Sniffs_Files_AtLeastOneModule implements PHP_CodeSniffer_Sniff
      * @param int                  $stackPtr  The position in the stack where
      *                                        the token was found.
      *
-     * @return void
+     * @return void|boolean
      */
     public function process(PHP_CodeSniffer_File $phpcsFile, $stackPtr)
     {
         // get all the tokens we are interested in
         $tokens = $phpcsFile->getTokens();
-        
-        // check if we got the @module tag, if so increment the counter
-        if (strpos($tokens[$stackPtr]['content'], '@module') !== false) {
-            
-            $this->counter ++;
+
+        // check which comes first, @class or one of the others
+        $classIndex = strpos($tokens[$stackPtr]['content'], '@class');
+
+        // if we do not even have a @class tag we can move on
+        if ($classIndex === false) {
+
+            return false;
         }
-        
-        // if we reached the end and got a count of 0 we will throw an error
-        if (($stackPtr === count($tokens) - 1) && $this->counter === 0) {
-            
-            $error = 'The @module tag seems to be missing. It is needed at least once.';
+
+        // check the others
+        $staticIndex = strpos($tokens[$stackPtr]['content'], '@static');
+        $constructorIndex = strpos($tokens[$stackPtr]['content'], '@constructor');
+
+        // if both are false there is an error, if both are not there is as well
+        if ($staticIndex === false && $constructorIndex === false) {
+
+            $error = 'There is neither a @static nor a @constructor tag near @class tag.Use one.';
             $phpcsFile->addError($error, $stackPtr, 'Found', array());
+
+        } elseif ($staticIndex !== false && $constructorIndex !== false) {
+
+            $error = 'There is both a @static and a @constructor tag near @class tag. Use one.';
+            $phpcsFile->addError($error, $stackPtr, 'Found', array());
+
+        } elseif ($classIndex > ((int) $staticIndex + (int) $constructorIndex)) {
+            // if any of the other tags are in front of the @class tag we will create a warning
+
+            $warning = 'The @class tag should be in front of any @static or @constructor tag.';
+            $phpcsFile->addWarning($warning, $stackPtr, 'Found', array());
         }
     }
 }
