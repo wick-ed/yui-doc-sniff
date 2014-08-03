@@ -1,4 +1,4 @@
- <?xml version="1.0"?>
+<?xml version="1.0"?>
 <ruleset name="YuiDoc">
     <description>A custom coding standard.</description>
     
@@ -8,4 +8,7 @@
     <rule ref="Generic.Files.LineEndings"/>
     <!-- @module tag at least once per file -->
     <rule ref="YuiDoc.Files.AtLeastOneModule"/>
+    <!-- @module tag at least once per file -->
+    <rule ref="YuiDoc.Class.ConstructOrStatic"/>
+    <rule ref="YuiDoc.Class.HeaderComments"/>
 </ruleset>

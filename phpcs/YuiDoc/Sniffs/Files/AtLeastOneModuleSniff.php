@@ -1,6 +1,6 @@
  <?php
 /**
- * YuiDoc\Files\AtLeastOneModule
+ * YuiDoc\Files\AtLeastOneModuleSniff
  *
  * PHP version 5
  *
@@ -20,7 +20,7 @@
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/wick-ed/yui-doc-sniff
  */
-class YuiDoc_Sniffs_Files_AtLeastOneModule implements PHP_CodeSniffer_Sniff
+class YuiDoc_Sniffs_Files_AtLeastOneModuleSniff implements PHP_CodeSniffer_Sniff
 {
     
     /**
@@ -28,7 +28,7 @@ class YuiDoc_Sniffs_Files_AtLeastOneModule implements PHP_CodeSniffer_Sniff
      *
      * @var array $supportedTokenizers
      */
-    public $supportedTokenizers = array('PHP', 'JS',);
+    public $supportedTokenizers = array('JS');
     
     /**
      * Counter to keep track of the occurences of the @module tag

@@ -1,6 +1,6 @@
  <?php
 /**
- * YuiDoc\Files\ConstructOrStatic
+ * YuiDoc\Files\ConstructOrStaticSniff
  *
  * PHP version 5
  *
@@ -13,13 +13,14 @@
 
 /**
  * This sniff ensures that there is either a @constructor or @static tag beneath the @class tag
+ *
  * @category  PHP
  * @package   PHP_CodeSniffer
  * @author    Bernhard Wick wick.b@hotmail.de
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/wick-ed/yui-doc-sniff
  */
-class YuiDoc_Sniffs_Class_ConstructOrStatic implements PHP_CodeSniffer_Sniff
+class YuiDoc_Sniffs_Class_ConstructOrStaticSniff implements PHP_CodeSniffer_Sniff
 {
     
     /**
@@ -27,7 +28,7 @@ class YuiDoc_Sniffs_Class_ConstructOrStatic implements PHP_CodeSniffer_Sniff
      *
      * @var array $supportedTokenizers
      */
-    public $supportedTokenizers = array('PHP', 'JS',);
+    public $supportedTokenizers = array('JS');
     
     /**
      * Counter to keep track of the occurences of the @module tag
