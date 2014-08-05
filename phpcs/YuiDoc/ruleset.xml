@@ -9,5 +9,6 @@
     <!-- @module tag at least once per file -->
     <rule ref="YuiDoc.Files.AtLeastOneModule"/>
     <!-- @module tag at least once per file -->
+    <rule ref="YuiDoc.Class.HeaderTags"/>
     <rule ref="YuiDoc.Class.HeaderComments"/>
 </ruleset>

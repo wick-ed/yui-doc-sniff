@@ -1,6 +1,6 @@
  <?php
 /**
- * YuiDoc\Files\HeaderCommentsSniff
+ * YuiDoc\Class\HeaderTagsSniff
  *
  * PHP version 5
  *
@@ -20,7 +20,7 @@
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/wick-ed/yui-doc-sniff
  */
-class YuiDoc_Sniffs_Class_HeaderCommentsSniff implements PHP_CodeSniffer_Sniff
+class YuiDoc_Sniffs_Class_HeaderTagsSniff implements PHP_CodeSniffer_Sniff
 {
     
     /**
@@ -29,7 +29,29 @@ class YuiDoc_Sniffs_Class_HeaderCommentsSniff implements PHP_CodeSniffer_Sniff
      * @var array $supportedTokenizers
      */
     public $supportedTokenizers = array('JS');
+    
+    /**
+     * Marks the begin of the classes body so we do not try to 
+     * analyze comment blocks within the class
+     *
+     * @var integer $beginOfBodyIndex
+     */
+    protected $beginOfBodyIndex;
 
+    /**
+     * The tags which MUST be present
+     * 
+     * @var array $neededTags
+     */
+    protected $requiredTags = array('@class');
+    
+    /**
+     * The tags which of only ONE of them should be present
+     * 
+     * @var array $rivalingTags
+     */
+    protected $rivalingTags = array('@constructor', '@static');
+    
     /**
      * The tags which of only ONE of them should be present
      * 
@@ -42,7 +64,7 @@ class YuiDoc_Sniffs_Class_HeaderCommentsSniff implements PHP_CodeSniffer_Sniff
         '@extends' => false,
         '@namespace' => false
         );
-    
+
     /**
      * Returns the token types that this sniff is interested in.
      *
@@ -77,6 +99,7 @@ class YuiDoc_Sniffs_Class_HeaderCommentsSniff implements PHP_CodeSniffer_Sniff
 
         // with the T_DOC_COMMENT_OPEN_TAG tag come the indexes of the other comment tags
         $commentTagIndexes = $tokens[$stackPtr]['comment_tags'];
+        $closingTagIndex = $tokens[$stackPtr]['comment_closer'];
         
         // now iterate over all the indexes and get the tokens stored within them
         foreach ($commentTagIndexes as $commentTagIndex) {
@@ -88,44 +111,59 @@ class YuiDoc_Sniffs_Class_HeaderCommentsSniff implements PHP_CodeSniffer_Sniff
                 $this->relevantTags[$tagContent] = true;
             }
         }
-        
-        // there should be a comment before the first tag
-        $docCommentIndex = $phpcsFile->findNext(array(T_DOC_COMMENT_STRING), $stackPtr);
-        if ($commentTagIndexes[0] < $docCommentIndex) {
+
+        // did we get all of the required tags?
+        foreach ($this->requiredTags as $requiredTag) {
             
-            $error = 'There must be a doc comment before the first tag in line %s.';
+            // if we got the entry but it is not set we have to create an error
+            if ($this->relevantTags[$requiredTag] !== true) {
+                
+                $error = 'Missing required tag %s.';
+                $phpcsFile->addError($error, $stackPtr, 'Found', array($requiredTag));              
+            }
+        }
+        
+        // are there doubled rivaling tags?
+        $counter = 0;
+        foreach ($this->rivalingTags as $rivalingTag) {
+            
+            // if we got the entry we have to increment the counter
+            if ($this->relevantTags[$rivalingTag] === true) {
+                
+                $counter ++;              
+            }
+            
+            // if the counter is higher than 1 we got a problem
+            if ($counter > 1) {
+                
+                $error = 'Got several of the rivaling tags %s. '
+                        . 'There should be only one.';
+                $phpcsFile->addError(
+                        $error, 
+                        $stackPtr, 
+                        'Found', 
+                        array(implode(', ', $this->rivalingTags))
+                        );              
+            }
+        }
+        
+        // there should be at least ONE of the rivaling tags
+        if ($counter === 0) {
+            
+            $error = 'You need at least one of these tags: %s.';
             $phpcsFile->addError(
                     $error, 
                     $stackPtr, 
                     'Found', 
-                    array($commentTagIndexes[0]['line'])
-                    ); 
-                    
-        } else { 
-        
-            // there also should be an empty line in between comment and first tag
-            $starCounter = 0;
-            for ($i = $docCommentIndex; $i < $commentTagIndexes[0]; $i++) {
-
-                // if we got a star we have to count it
-                if ($tokens[$i]['code'] === T_DOC_COMMENT_STAR) {
-                    
-                    $starCounter ++;
-                }
-            }
-        
-            // anything else than 2 stars means there is no or mone than one empty line
-            if ($starCounter !== 2) {
-                
-                $warning = 'There must be exactly one empty line between the doc comment and the first tag in line %s.';
-                $phpcsFile->addWarning(
-                    $warning, 
-                    $stackPtr, 
-                    'Found', 
-                    array($docCommentIndex['line'] + 1)
-                    );
-            }
+                    array(implode(', ', $this->rivalingTags))
+                    );    
         }
+        
+        // check if there seems to be a need for a namespace tag
+        $afterClassName = $phpcsFile->findNext(
+                array(T_OPEN_PARENTHESIS, T_EQUAL), 
+                $closingTagIndex
+                );
     }
     
     /**
