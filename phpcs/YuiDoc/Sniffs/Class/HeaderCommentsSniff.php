@@ -88,44 +88,6 @@ class YuiDoc_Sniffs_Class_HeaderCommentsSniff implements PHP_CodeSniffer_Sniff
                 $this->relevantTags[$tagContent] = true;
             }
         }
-        
-        // there should be a comment before the first tag
-        $docCommentIndex = $phpcsFile->findNext(array(T_DOC_COMMENT_STRING), $stackPtr);
-        if ($commentTagIndexes[0] < $docCommentIndex) {
-            
-            $error = 'There must be a doc comment before the first tag in line %s.';
-            $phpcsFile->addError(
-                    $error, 
-                    $stackPtr, 
-                    'Found', 
-                    array($commentTagIndexes[0]['line'])
-                    ); 
-                    
-        } else { 
-        
-            // there also should be an empty line in between comment and first tag
-            $starCounter = 0;
-            for ($i = $docCommentIndex; $i < $commentTagIndexes[0]; $i++) {
-
-                // if we got a star we have to count it
-                if ($tokens[$i]['code'] === T_DOC_COMMENT_STAR) {
-                    
-                    $starCounter ++;
-                }
-            }
-        
-            // anything else than 2 stars means there is no or mone than one empty line
-            if ($starCounter !== 2) {
-                
-                $warning = 'There must be exactly one empty line between the doc comment and the first tag in line %s.';
-                $phpcsFile->addWarning(
-                    $warning, 
-                    $stackPtr, 
-                    'Found', 
-                    array($docCommentIndex['line'] + 1)
-                    );
-            }
-        }
     }
     
     /**
