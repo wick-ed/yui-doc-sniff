@@ -1,10 +1,10 @@
  <?php
 /**
- * YuiDoc\Class\HeaderTagsSniff
+ * YuiDoc\Classes\HeaderTagsSniff
  *
  * PHP version 5
  *
- * @category  PHP
+ * @category  JS
  * @package   PHP_CodeSniffer
  * @author    Bernhard Wick wick.b@hotmail.de
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
@@ -12,15 +12,16 @@
  */
 
 /**
- * This sniff ensures that class name mentioned behind @class matches the actual class name
+ * This sniff ensures that all needed class doc comment tags are present.
+ * It also assures they are grouped right and do not contain eliminate each other
  *
- * @category  PHP
+ * @category  JS
  * @package   PHP_CodeSniffer
  * @author    Bernhard Wick wick.b@hotmail.de
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/wick-ed/yui-doc-sniff
  */
-class YuiDoc_Sniffs_Class_HeaderTagsSniff implements PHP_CodeSniffer_Sniff
+class YuiDoc_Sniffs_Classes_HeaderTagsSniff implements PHP_CodeSniffer_Sniff
 {
     
     /**
@@ -34,9 +35,9 @@ class YuiDoc_Sniffs_Class_HeaderTagsSniff implements PHP_CodeSniffer_Sniff
      * Marks the begin of the classes body so we do not try to 
      * analyze comment blocks within the class
      *
-     * @var integer $beginOfBodyIndex
+     * @var integer $lastValuableIndex
      */
-    protected $beginOfBodyIndex;
+    protected $lastValuableIndex;
 
     /**
      * The tags which MUST be present
@@ -86,10 +87,10 @@ class YuiDoc_Sniffs_Class_HeaderTagsSniff implements PHP_CodeSniffer_Sniff
      */
     public function process(PHP_CodeSniffer_File $phpcsFile, $stackPtr)
     {
-        $this->initBeginOfBodyIndex($phpcsFile);
+        $this->initLastValuableIndex($phpcsFile);
         
         // We are done here if we already are within the body
-        if ($stackPtr > $this->beginOfBodyIndex) {
+        if ($stackPtr > $this->lastValuableIndex) {
             
             return false;
         }
@@ -123,47 +124,46 @@ class YuiDoc_Sniffs_Class_HeaderTagsSniff implements PHP_CodeSniffer_Sniff
             }
         }
         
-        // are there doubled rivaling tags?
-        $counter = 0;
-        foreach ($this->rivalingTags as $rivalingTag) {
-            
-            // if we got the entry we have to increment the counter
-            if ($this->relevantTags[$rivalingTag] === true) {
-                
-                $counter ++;              
+        /**
+         * Process rivaling tags here if there are any
+         */
+        if (!empty($this->rivalingTags)) {
+            // are there doubled rivaling tags?
+            $counter = 0;
+            foreach ($this->rivalingTags as $rivalingTag) {
+
+                // if we got the entry we have to increment the counter
+                if ($this->relevantTags[$rivalingTag] === true) {
+
+                    $counter ++;              
+                }
+
+                // if the counter is higher than 1 we got a problem
+                if ($counter > 1) {
+
+                    $error = 'Got several of the rivaling tags %s. '
+                            . 'There should be only one.';
+                    $phpcsFile->addError(
+                            $error, 
+                            $stackPtr, 
+                            'Found', 
+                            array(implode(', ', $this->rivalingTags))
+                            );              
+                }
             }
-            
-            // if the counter is higher than 1 we got a problem
-            if ($counter > 1) {
-                
-                $error = 'Got several of the rivaling tags %s. '
-                        . 'There should be only one.';
+
+            // there should be at least ONE of the rivaling tags
+            if ($counter === 0) {
+
+                $error = 'You need at least one of these tags: %s.';
                 $phpcsFile->addError(
                         $error, 
                         $stackPtr, 
                         'Found', 
                         array(implode(', ', $this->rivalingTags))
-                        );              
+                        );    
             }
         }
-        
-        // there should be at least ONE of the rivaling tags
-        if ($counter === 0) {
-            
-            $error = 'You need at least one of these tags: %s.';
-            $phpcsFile->addError(
-                    $error, 
-                    $stackPtr, 
-                    'Found', 
-                    array(implode(', ', $this->rivalingTags))
-                    );    
-        }
-        
-        // check if there seems to be a need for a namespace tag
-        $afterClassName = $phpcsFile->findNext(
-                array(T_OPEN_PARENTHESIS, T_EQUAL), 
-                $closingTagIndex
-                );
     }
     
     /**
@@ -173,12 +173,12 @@ class YuiDoc_Sniffs_Class_HeaderTagsSniff implements PHP_CodeSniffer_Sniff
      * 
      * @return void
      */
-    protected function initBeginOfBodyIndex($phpcsFile) 
+    protected function initLastValuableIndex($phpcsFile) 
     {
         // only init if we did not do it before
-        if (!isset($this->beginOfBodyIndex)) {
+        if (!isset($this->lastValuableIndex)) {
         
-            $this->beginOfBodyIndex = $phpcsFile->findNext(
+            $this->lastValuableIndex = $phpcsFile->findNext(
                     array(T_OPEN_PARENTHESIS), 
                     0
                     );

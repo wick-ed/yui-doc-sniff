@@ -4,7 +4,7 @@
  *
  * PHP version 5
  *
- * @category  PHP
+ * @category  JS
  * @package   PHP_CodeSniffer
  * @author    Bernhard Wick wick.b@hotmail.de
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
@@ -16,7 +16,7 @@
  * beginning it.
  * It is separated from the block tags by an empty line
  *
- * @category  PHP
+ * @category  JS
  * @package   PHP_CodeSniffer
  * @author    Bernhard Wick wick.b@hotmail.de
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)

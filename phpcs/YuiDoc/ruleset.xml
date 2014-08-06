@@ -14,7 +14,10 @@
     <rule ref="YuiDoc.Files.AtLeastOneModule"/>
     
     <!-- we got all needed header class tags in the right order and the right grouping -->
-    <rule ref="YuiDoc.Class.HeaderTags"/>
+    <rule ref="YuiDoc.Classes.HeaderTags"/>
     <!-- the comments of the header tags do fit to the code belonging to it -->
-    <rule ref="YuiDoc.Class.HeaderComments"/>
+    <rule ref="YuiDoc.Classes.HeaderComments"/>
+    
+    <!-- we got all needed header methods tags in the right order and the right grouping -->
+    <rule ref="YuiDoc.Methods.HeaderTags"/>
 </ruleset>

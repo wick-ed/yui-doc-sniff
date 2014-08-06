@@ -1,10 +1,10 @@
  <?php
 /**
- * YuiDoc\Files\HeaderCommentsSniff
+ * YuiDoc\Classes\HeaderCommentsSniff
  *
  * PHP version 5
  *
- * @category  PHP
+ * @category  JS
  * @package   PHP_CodeSniffer
  * @author    Bernhard Wick wick.b@hotmail.de
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
@@ -12,15 +12,16 @@
  */
 
 /**
- * This sniff ensures that class name mentioned behind @class matches the actual class name
+ * This sniff ensures that information given along any found class header tag
+ * is sane in regards to the code accompanying it
  *
- * @category  PHP
+ * @category  JS
  * @package   PHP_CodeSniffer
  * @author    Bernhard Wick wick.b@hotmail.de
  * @license   http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
  * @link      https://github.com/wick-ed/yui-doc-sniff
  */
-class YuiDoc_Sniffs_Class_HeaderCommentsSniff implements PHP_CodeSniffer_Sniff
+class YuiDoc_Sniffs_Classes_HeaderCommentsSniff implements PHP_CodeSniffer_Sniff
 {
     
     /**
