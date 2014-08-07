@@ -85,13 +85,19 @@ class YuiDoc_Sniffs_Methods_HeaderTagsSniff extends YuiDoc_Sniffs_Classes_Header
      */
     public function process(PHP_CodeSniffer_File $phpcsFile, $stackPtr)
     {
-        // if this is indeed a method doc block we have to invoke the parent
-        if ($this->isRelevantDocBlock($phpcsFile, $stackPtr)) {
-            
-            parent::process($phpcsFile, $stackPtr);
-        }
-    }
-    
+        // if this is not relevant for us we will pass
+        if (!$this->isRelevantDocBlock($phpcsFile, $stackPtr)) {
+        
+            return false;
+        }    
+        
+        // invoke parent implementation otherwise
+        parent::process($phpcsFile, $stackPtr);
+
+        // invoke the postProcess hook
+        $this->postProcess($phpcsFile, $stackPtr);
+    }   
+
     /**
      * We have to keep searching until the end of the file, so set the 
      * "body begin" accordingly to use the parent implementation
@@ -120,6 +126,79 @@ class YuiDoc_Sniffs_Methods_HeaderTagsSniff extends YuiDoc_Sniffs_Classes_Header
      */
     protected function isRelevantDocBlock(PHP_CodeSniffer_File $phpcsFile, $stackPtr)
     {
-        return true;
+        // only if there is a T_FUNCTION token we are where we want to be
+        $functionIndex = $phpcsFile->findNext(array(T_FUNCTION), $stackPtr);
+        
+        // something that might state the end of declaration is a comma or
+        // an closing curly bracket
+        $declarationEndIndex = $phpcsFile->findNext(
+                array(T_COMMA, T_CLOSE_CURLY_BRACKET),
+                $stackPtr
+                );
+        
+        // if we got a function keyword and it occurend in the right place
+        if ($functionIndex !== false && $functionIndex < $declarationEndIndex) {
+            
+            return true;
+        }
+        
+        // still here? Seems we did not fing anything
+        return false;
+    }
+    
+    /**
+     * Hook which allows to detach specific tests from more generic ones.
+     * This enables us to easily extend these classes without getting all of 
+     * their behaviour
+     *
+     * @param PHP_CodeSniffer_File $phpcsFile The file where the token was found.
+     * @param int                  $stackPtr  The position in the stack where
+     *                                        the token was found.
+     *
+     * @return void|boolean
+     */
+    protected function postProcess(PHP_CodeSniffer_File $phpcsFile, $stackPtr)
+    {
+        /**
+         * Test for params or the need for them
+         */
+        $tokens = $phpcsFile->getTokens();
+        
+        // get the indexes of the brackets
+        $bracketOpenIndex = $phpcsFile->findNext(array(T_OPEN_PARENTHESIS), $stackPtr);
+        $bracketCloseIndex = $tokens[$bracketOpenIndex]['parenthesis_closer'];
+        
+        // if there are params we have to check how many
+        $expectationCounter = -1;
+        $tmp = $stackPtr;
+        do {
+            
+            $expectationCounter ++;
+            $tmp = $phpcsFile->findNext(array(T_STRING), $tmp + 1);
+            
+        } while ($tmp !== false && $tmp < $bracketCloseIndex);
+        
+        // now get the number of @param tags from the doc block and compare
+        $commentTagsIndexes = $tokens[$stackPtr]['comment_tags'];
+        $actualCounter = 0;
+        foreach ($commentTagsIndexes as $commentTagsIndex) {
+            
+            if ($tokens[$commentTagsIndex]['content'] === '@param') {
+                
+                $actualCounter ++;
+            }
+        }
+        
+        // if the counters do not match we got an error
+        if ($expectationCounter !== $actualCounter) {
+            
+            $error = 'Mismatching @param tag count. Expected %s but got %s.';
+            $phpcsFile->addError(
+                    $error, 
+                    $stackPtr, 
+                    'Found',
+                    array($expectationCounter, $actualCounter)
+                    );
+        }
     }
 }
