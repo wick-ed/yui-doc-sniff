@@ -85,26 +85,38 @@ class YuiDoc_Sniffs_Generic_BlockCommentSniff implements PHP_CodeSniffer_Sniff
         } elseif (!empty($commentTagIndexes)) { 
         
             // there also should be an empty line in between comment and first tag
-            $starCounter = 0;
+            $beforeTagStarCounter = 0;
+            $interCommentStarCounter = 0;
             for ($i = $docCommentIndex; $i < $commentTagIndexes[0]; $i++) {
 
-                // if we got a star we have to count it
+                // if we got a star we have to count it unless we again passed a comment.
+                // also count stars in between different comment lines, these should not spread to far as well
                 if ($tokens[$i]['code'] === T_DOC_COMMENT_STAR) {
-                    
-                    $starCounter ++;
+
+                    $beforeTagStarCounter ++;
+                    $interCommentStarCounter ++;
+
+                } elseif ($tokens[$i]['code'] === T_DOC_COMMENT_STRING) {
+                    // reset the counter of stars coming before the first tag, also check if there is too much open
+                    // space in between the comment lines we already passed
+
+                    $beforeTagStarCounter = 0;
+
+                    // if there are more than 2 stars in between the comment lines we have to warn about it
+                    if ($interCommentStarCounter > 2) {
+
+                        $warning = "There shoudn't be more than 1 empty line in between comment lines.";
+                        $phpcsFile->addWarning($warning, $stackPtr, 'Found', array());
+                    }
+                    $interCommentStarCounter = 0;
                 }
             }
         
-            // anything else than 2 stars means there is no or mone than one empty line
-            if ($starCounter !== 2) {
+            // anything else than 2 stars means there is no or more than one empty line
+            if ($beforeTagStarCounter !== 2) {
                 
                 $error = 'There must be exactly one empty line between the doc comment and the first tag.';
-                $phpcsFile->addError(
-                    $error, 
-                    $stackPtr, 
-                    'Found', 
-                    array()
-                    );
+                $phpcsFile->addError($error, $stackPtr, 'Found', array());
             }
         }
     }
